@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waze ל-Google Maps | המרת קישורים</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Heebo', 'Arial Hebrew', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(160deg, #d6eef8 0%, #c2e4f5 40%, #b8dff2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px 40px;
+    }
+
+    /* ── Download banner ── */
+    .download-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px dashed #7bbcd8;
+      border-radius: 14px;
+      padding: 10px 20px;
+      color: #3a7ca5;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.35);
+      cursor: pointer;
+      margin-bottom: 36px;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+    .download-btn:hover { background: rgba(255,255,255,0.55); }
+
+    /* ── Mascot area ── */
+    .mascots {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+
+    .mascot-waze {
+      width: 120px;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+    }
+
+    .mascot-gmaps {
+      width: 96px;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+      margin-bottom: 4px;
+    }
+
+    .handshake {
+      font-size: 28px;
+      padding-bottom: 10px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    /* ── Title ── */
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #1a3a52;
+      text-align: center;
+      line-height: 1.35;
+      margin-bottom: 28px;
+    }
+
+    /* ── Form ── */
+    .form-wrap {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 15px 18px;
+      background: #fff;
+      border: 1.5px solid rgba(255,255,255,0.9);
+      border-radius: 14px;
+      color: #1a3a52;
+      font-size: 0.92rem;
+      direction: ltr;
+      text-align: left;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    input[type="text"]::placeholder {
+      color: #a0b8c8;
+      direction: rtl;
+      text-align: right;
+    }
+    input[type="text"]:focus {
+      border-color: #4285f4;
+      box-shadow: 0 0 0 3px rgba(66,133,244,0.15), 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .btn-convert {
+      width: 100%;
+      padding: 15px;
+      background: #3d8fe0;
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Heebo', Arial, sans-serif;
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(61,143,224,0.35);
+    }
+    .btn-convert:hover  { background: #2d7ed0; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(61,143,224,0.45); }
+    .btn-convert:active { transform: translateY(0); }
+    .btn-convert:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.2s steps(4, end) infinite;
+    }
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+    }
+
+    /* ── Error ── */
+    .error-box {
+      display: none;
+      background: rgba(255,255,255,0.7);
+      border: 1.5px solid #f5a5a0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: #c0392b;
+      font-weight: 500;
+      text-align: center;
+    }
+    .error-box.visible { display: block; animation: fadeIn 0.25s ease; }
+
+    /* ── Result ── */
+    .result-area { display: none; width: 100%; max-width: 400px; }
+    .result-area.visible { display: flex; flex-direction: column; gap: 10px; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-box {
+      background: rgba(255,255,255,0.85);
+      border: 1.5px solid rgba(255,255,255,0.9);
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .result-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #27ae60;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 5px;
+    }
+    .result-link {
+      font-size: 0.82rem;
+      color: #2563eb;
+      word-break: break-all;
+      direction: ltr;
+      text-align: left;
+      display: block;
+      line-height: 1.55;
+    }
+
+    .action-btns { display: flex; gap: 10px; }
+
+    .btn-action {
+      flex: 1;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.87rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Heebo', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-action:hover { transform: translateY(-1px); }
+
+    .btn-copy {
+      background: rgba(255,255,255,0.85);
+      color: #3a7ca5;
+      border: 1.5px solid rgba(255,255,255,0.9);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .btn-open {
+      background: #3d8fe0;
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(61,143,224,0.30);
+    }
+    .btn-open:hover { box-shadow: 0 5px 16px rgba(61,143,224,0.45); }
+
+    /* ── Toast ── */
+    .toast {
+      display: none;
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #27ae60;
+      color: #fff;
+      padding: 11px 26px;
+      border-radius: 100px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 999;
+      box-shadow: 0 6px 20px rgba(39,174,96,0.35);
+      font-family: 'Heebo', Arial, sans-serif;
+      white-space: nowrap;
+    }
+    .toast.show { display: block; animation: toastIn 0.3s ease; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    footer {
+      margin-top: 36px;
+      font-size: 0.78rem;
+      color: #6a9ab8;
+      text-align: center;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Mascots illustration ── -->
+  <div class="mascots">
+
+    <!-- Waze mascot (real Wazer style) -->
+    <svg class="mascot-waze" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Body -->
+      <path d="M20 90 Q18 130 60 140 Q102 130 100 90 L100 68 Q100 28 60 28 Q20 28 20 68 Z" fill="white"/>
+      <!-- Head top bump/horn -->
+      <path d="M60 28 Q65 10 75 14 Q68 22 60 28Z" fill="white"/>
+      <!-- Left eye white -->
+      <circle cx="44" cy="72" r="12" fill="#1a1f36"/>
+      <circle cx="47" cy="68" r="4.5" fill="white"/>
+      <!-- Right eye -->
+      <circle cx="76" cy="72" r="12" fill="#1a1f36"/>
+      <circle cx="79" cy="68" r="4.5" fill="white"/>
+      <!-- Smile -->
+      <path d="M43 96 Q60 112 77 96" stroke="#1a1f36" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- Left arm (reaching for handshake) -->
+      <path d="M20 95 Q5 105 8 118 Q10 128 22 124" stroke="white" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- Right arm -->
+      <path d="M100 95 Q115 105 112 118 Q110 128 98 124" stroke="white" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <!-- Left leg -->
+      <path d="M46 138 Q44 152 38 156" stroke="white" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <!-- Right leg -->
+      <path d="M74 138 Q76 152 82 156" stroke="white" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <!-- Left hand extended for shake -->
+      <circle cx="8" cy="121" r="7" fill="white"/>
+    </svg>
+
+    <!-- Google Maps mascot/pin -->
+    <svg class="mascot-gmaps" viewBox="0 0 100 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Pin body -->
+      <path d="M50 8 C25 8 8 26 8 48 C8 76 50 140 50 140 C50 140 92 76 92 48 C92 26 75 8 50 8Z" fill="#EA4335"/>
+      <!-- Pin inner shadow -->
+      <path d="M50 8 C25 8 8 26 8 48 C8 60 14 72 22 82 L50 140 C50 140 68 110 78 86" fill="#C62828" opacity="0.2"/>
+      <!-- White circle inside -->
+      <circle cx="50" cy="46" r="24" fill="white"/>
+      <!-- Google G -->
+      <path d="M58 44.5H50V49.5H56.8C56.3 51.8 54.2 53.2 50 53.2C45.6 53.2 42 49.8 42 46C42 42.2 45.6 38.8 50 38.8C52 38.8 53.8 39.6 55.1 40.8L58.9 37C56.9 35.2 53.6 34 50 34C42.8 34 37 39.4 37 46C37 52.6 42.8 58 50 58C57.4 58 62 53.2 62 46C62 45.5 62 45 61.9 44.5H58Z" fill="#4285F4"/>
+      <!-- Arm reaching left for handshake -->
+      <path d="M8 90 Q-8 100 -4 113 Q-2 122 10 119" stroke="#EA4335" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <!-- Left hand -->
+      <circle cx="-4" cy="116" r="6" fill="#EA4335"/>
+      <!-- Legs -->
+      <path d="M38 136 Q36 150 30 154" stroke="#EA4335" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <path d="M62 136 Q64 150 70 154" stroke="#EA4335" stroke-width="8" stroke-linecap="round" fill="none"/>
+    </svg>
+
+  </div>
+
+  <h1>המרת קישור מ-Waze<br/>ל-Google Maps</h1>
+
+  <div class="form-wrap">
+    <div class="error-box" id="errorBox"></div>
+
+    <input
+      type="text"
+      id="wazeInput"
+      placeholder="הדבק כאן קישור מ-Waze"
+    />
+
+    <button class="btn-convert" id="convertBtn" onclick="convert()">המר</button>
+  </div>
+
+  <div class="result-area" id="resultArea">
+    <div class="result-box">
+      <div class="result-label">✓ קישור Google Maps מוכן</div>
+      <span class="result-link" id="resultLink"></span>
+    </div>
+    <div class="action-btns">
+      <button class="btn-action btn-copy" onclick="copyLink()">📋 העתק</button>
+      <button class="btn-action btn-open" onclick="openLink()">פתח ב-Google Maps ↗</button>
+    </div>
+  </div>
+
+  <footer>Created By YakovCohen</footer>
+
+  <div class="toast" id="toast">✓ הקישור הועתק ללוח!</div>
+
+  <script>
+    let convertedUrl = '';
+
+    // ── Extract lat/lng from strings like "ll.32.08,34.78" or "32.08,34.78" ──
+    function extractCoords(str) {
+      if (!str) return null;
+      str = str.replace(/^[a-zA-Z]+\./, '');
+      const parts = str.split(',');
+      if (parts.length >= 2) {
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180)
+          return { lat, lng };
+      }
+      return null;
+    }
+
+    function toGoogleMaps(lat, lng) {
+      return `https://maps.google.com/?q=${lat},${lng}`;
+    }
+
+    // ── Try to parse a Waze URL directly (no network) ──
+    function tryParseWazeUrl(raw) {
+      raw = raw.trim();
+      if (!raw.startsWith('http')) raw = 'https://' + raw;
+
+      let url;
+      try { url = new URL(raw); }
+      catch (e) { throw new Error('הקישור שהוכנס אינו תקין'); }
+
+      const hostname = url.hostname.toLowerCase();
+      const params   = url.searchParams;
+
+      if (!hostname.includes('waze.com') && !hostname.includes('waze.us') && hostname !== 'wazelinks.com')
+        throw new Error('נראה שזה לא קישור Waze. אנא הכנס קישור מ-waze.com');
+
+      // ── waze.com/go/<base64> short links ──
+      const goMatch = url.pathname.match(/^\/go\/([A-Za-z0-9+/=_-]+)$/);
+      if (goMatch) {
+        try {
+          const b64 = goMatch[1].replace(/-/g, '+').replace(/_/g, '/');
+          const json = JSON.parse(atob(b64));
+          const lat = json.lat ?? json.latitude;
+          const lng = json.lon ?? json.lng ?? json.longitude;
+          if (lat != null && lng != null) return toGoogleMaps(lat, lng);
+          const name = json.place_name || json.name || json.title;
+          if (name) return `https://maps.google.com/?q=${encodeURIComponent(name)}`;
+        } catch (e) { /* not valid base64 JSON — fall through to proxy */ }
+        return null;
+      }
+
+      const ll = params.get('ll') || params.get('latlng');
+      if (ll) { const c = extractCoords(ll); if (c) return toGoogleMaps(c.lat, c.lng); }
+
+      const to = params.get('to');
+      if (to) {
+        const c = extractCoords(to);
+        if (c) return toGoogleMaps(c.lat, c.lng);
+        return `https://maps.google.com/?q=${encodeURIComponent(to.replace(/^[a-zA-Z]+\./, ''))}`;
+      }
+
+      const q = params.get('q') || params.get('query') || params.get('place_name');
+      if (q) {
+        const c = extractCoords(q);
+        if (c) return toGoogleMaps(c.lat, c.lng);
+        return `https://maps.google.com/?q=${encodeURIComponent(q)}`;
+      }
+
+      // place= param: Google Place IDs start with "ChIJ"
+      const place = params.get('place');
+      if (place) {
+        if (/^ChIJ/i.test(place)) return `https://maps.google.com/?q=place_id:${encodeURIComponent(place)}`;
+        return `https://maps.google.com/?q=${encodeURIComponent(place)}`;
+      }
+
+      // ── live-map/directions — try from/to params ──
+      const fromLl = params.get('from');
+      const dest   = params.get('dest');
+      for (const v of [dest, fromLl].filter(Boolean)) {
+        const c = extractCoords(v);
+        if (c) return toGoogleMaps(c.lat, c.lng);
+      }
+
+      // ── share_drive (route share) — sd= token needs server resolution ──
+      // Return null so the proxy path is attempted; if proxy also fails we show
+      // a specific message in the catch block.
+      if (params.get('a') === 'share_drive' || params.get('sd')) {
+        return null; // signal: needs proxy
+      }
+
+      // No recognisable params — return null so caller can try resolving
+      return null;
+    }
+
+    // ── Extract coords from HTML page content (Waze share pages) ──
+    function extractCoordsFromHtml(html) {
+      if (!html) return null;
+
+      // waze:// deep links embedded in href/content  e.g. waze://ul?ll=32.08,34.78
+      const wazeDeep = html.match(/waze:\/\/[^\s"']*ll=([0-9.-]+)[,+]([0-9.-]+)/i);
+      if (wazeDeep) return { lat: parseFloat(wazeDeep[1]), lng: parseFloat(wazeDeep[2]) };
+
+      // ?ll= or &ll= anywhere in any URL in the HTML
+      const llParam = html.match(/[?&]ll=([0-9.-]+)[,%2C]+([0-9.-]+)/i);
+      if (llParam) return { lat: parseFloat(llParam[1]), lng: parseFloat(llParam[2]) };
+
+      // JSON-style "lat":32.08,"lon":34.78 or "lat":32.08,"lng":34.78
+      const jsonCoord = html.match(/"lat"\s*:\s*([0-9.-]+)\s*,\s*"lo[ng][gn]?"\s*:\s*([0-9.-]+)/i);
+      if (jsonCoord) return { lat: parseFloat(jsonCoord[1]), lng: parseFloat(jsonCoord[2]) };
+
+      // og:url or canonical that contain ll=
+      const urlMatch = html.match(/content=["']([^"']*[?&]ll=[^"']+)["']/i)
+                    || html.match(/href=["']([^"']*[?&]ll=[^"']+)["']/i);
+      if (urlMatch) {
+        const inner = new URL(urlMatch[1].startsWith('http') ? urlMatch[1] : 'https://x.com' + urlMatch[1]);
+        return extractCoords(inner.searchParams.get('ll') || '');
+      }
+
+      return null;
+    }
+
+    // ── Follow redirects via CORS proxies (for short/encoded links) ──
+    async function fetchViaProxy(rawUrl) {
+      const PROXIES = [
+        u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+        u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+      ];
+
+      let lastErr = new Error('שגיאת רשת — בדוק חיבור לאינטרנט ונסה שוב');
+
+      for (const makeProxy of PROXIES) {
+        try {
+          const res = await fetch(makeProxy(rawUrl), { signal: AbortSignal.timeout(9000) });
+          if (!res.ok) { lastErr = new Error(`שגיאת שרת (${res.status})`); continue; }
+
+          const text = await res.text();
+
+          // allorigins wraps in JSON; codetabs returns raw HTML
+          let html = text;
+          let finalUrl = null;
+          try {
+            const json = JSON.parse(text);
+            html     = json?.contents || '';
+            finalUrl = json?.status?.url;
+          } catch (_) { /* codetabs returns raw HTML */ }
+
+          // If proxy followed redirect to a different URL, try parsing it first
+          if (finalUrl && finalUrl !== rawUrl) {
+            try {
+              const r = tryParseWazeUrl(finalUrl);
+              if (r) return r;
+            } catch (_) {}
+          }
+
+          // Try to extract coords from HTML
+          const c = extractCoordsFromHtml(html);
+          if (c) return toGoogleMaps(c.lat, c.lng);
+
+          // og:url / canonical fallback
+          const ogMatch = html.match(/property=["']og:url["']\s+content=["']([^"']+)["']/i)
+                       || html.match(/content=["']([^"']+)["']\s+property=["']og:url["']/i);
+          if (ogMatch) {
+            try { const r = tryParseWazeUrl(ogMatch[1]); if (r) return r; } catch (_) {}
+          }
+          const canonMatch = html.match(/rel=["']canonical["'][^>]*href=["']([^"']+)["']/i);
+          if (canonMatch) {
+            try { const r = tryParseWazeUrl(canonMatch[1]); if (r) return r; } catch (_) {}
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+
+      throw lastErr;
+    }
+
+    // ── Main convert (async to support redirect resolution) ──
+    async function convert() {
+      const input      = document.getElementById('wazeInput').value;
+      const errorBox   = document.getElementById('errorBox');
+      const resultArea = document.getElementById('resultArea');
+      const btn        = document.getElementById('convertBtn');
+
+      errorBox.classList.remove('visible');
+      resultArea.classList.remove('visible');
+      convertedUrl = '';
+
+      if (!input.trim()) { showError('אנא הכנס קישור Waze'); return; }
+
+      // 1. Try direct parse
+      let result = null;
+      try { result = tryParseWazeUrl(input); }
+      catch (e) { showError(e.message); return; }
+
+      if (result) {
+        finish(result);
+        return;
+      }
+
+      // 2. No params found — try to resolve the short/redirect URL
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-dots">מחפש מיקום</span>';
+
+      try {
+        result = await fetchViaProxy(input);
+        if (result) {
+          finish(result);
+        } else {
+          const isRoutShare = /[?&](a=share_drive|sd=)/.test(input);
+          showError(isRoutShare
+            ? 'קישורי שיתוף מסלול מ-Waze אינם נתמכים. שתף מיקום (לא מסלול) מ-Waze ונסה שוב'
+            : 'לא הצלחתי לזהות מיקום בקישור זה');
+        }
+      } catch (e) {
+        const isNetworkErr = e instanceof TypeError || e?.name === 'TimeoutError';
+        showError(isNetworkErr
+          ? 'שגיאת רשת — בדוק חיבור לאינטרנט ונסה שוב'
+          : (e.message || 'שגיאה לא ידועה'));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'המר';
+      }
+    }
+
+    function finish(url) {
+      convertedUrl = url;
+      document.getElementById('resultLink').textContent = url;
+      document.getElementById('resultArea').classList.add('visible');
+    }
+
+    function showError(msg) {
+      const b = document.getElementById('errorBox');
+      b.textContent = '⚠️ ' + msg;
+      b.classList.add('visible');
+    }
+
+    function copyLink() {
+      if (!convertedUrl) return;
+      navigator.clipboard.writeText(convertedUrl).then(() => {
+        const t = document.getElementById('toast');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2200);
+      });
+    }
+
+    function openLink() { if (convertedUrl) window.open(convertedUrl, '_blank'); }
+
+    document.getElementById('wazeInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') convert();
+    });
+  </script>
+</body>
+</html>
